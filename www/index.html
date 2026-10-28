@@ -352,13 +352,32 @@ body{transition:background-color .25s,color .25s}
 @keyframes fgWA{0%,100%{transform:rotate(24deg)}50%{transform:rotate(-24deg)}}
 @keyframes fgWF{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(-28deg)}}
 @media (prefers-reduced-motion:reduce){.fg *{animation:none!important}}
+.dc-t{font-size:1.1rem;line-height:1.5;margin:6px 0 14px}
+.dc-f{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.dc-in{animation:dcin .45s ease both}
+@keyframes dcin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.dc-in{animation:none}}
+.lb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.lb-row label{display:inline;margin:0}
+.lb-t{margin:14px 0 6px;font-size:.9rem;color:var(--muted)}
+.lb-seg{flex-wrap:wrap;border-radius:18px;width:fit-content;max-width:100%}
+select.fld{box-sizing:border-box;font-size:1rem;font-weight:500;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.lb-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.lb-ban{position:fixed;left:0;right:0;top:0;z-index:50;max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 14px;border-radius:0 0 18px 18px;background:var(--ink);color:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.3);animation:lbin .4s ease both}
+.lb-ban strong{display:block;font-size:1.05rem}
+.lb-ban span{display:block;font-size:.88rem;opacity:.85;margin:2px 0 10px}
+.lb-ban div{display:flex;gap:8px}
+.lb-ban button{border:0;border-radius:999px;padding:9px 16px;font-weight:700;background:rgba(127,127,127,.28);color:inherit}
+.lb-ban button.go{background:var(--accent);color:var(--surface)}
+@keyframes lbin{from{transform:translateY(-100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.lb-ban{animation:none}}
 </style>
 </head>
 <body>
 <main>
   <div class="themebar"><span id="tema-l">Tema</span><div class="seg" role="group" aria-labelledby="tema-l"><button data-tema="auto" aria-pressed="true">Auto</button><button data-tema="light" aria-pressed="false">Claro</button><button data-tema="dark" aria-pressed="false">Escuro</button></div></div>
   <h1>IMC e treino</h1>
-  <p class="sub">Calcule seu IMC, anote treinos e corridas e acompanhe a água do dia.</p>
+  <p class="sub" id="ola">Calcule seu IMC, anote treinos e corridas e acompanhe a água do dia.</p>
   <button class="ghost" id="open-perfil" style="margin:-10px 0 18px">Meu perfil</button>
 
   <div class="tabs" role="tablist">
@@ -454,6 +473,26 @@ body{transition:background-color .25s,color .25s}
       <div class="wadd"><button class="ghost" id="agua-som" aria-pressed="true">Som da água: ligado</button></div>
       <p class="hint" id="agua-msg" role="status"></p>
     </section>
+    <section class="card" id="agua-lemb" style="margin-top:14px">
+      <h2>Lembretes</h2>
+      <div class="lb-row"><span id="lb-l">Avisar para eu beber água</span>
+        <div class="seg" role="group" aria-labelledby="lb-l"><button data-lb="0" aria-pressed="true">Desligado</button><button data-lb="1" aria-pressed="false">Ligado</button></div></div>
+      <div id="lb-opt" hidden>
+        <p class="lb-t" id="lb-m">Avisar a cada</p>
+        <div class="seg lb-seg" role="group" aria-labelledby="lb-m"></div>
+        <div class="lb-row" style="margin-top:12px;justify-content:flex-start"><label for="lb-a">Das</label><select id="lb-a" class="fld"></select><label for="lb-b">até as</label><select id="lb-b" class="fld"></select></div>
+      </div>
+      <p class="hint" id="lb-st" role="status"></p>
+      <div class="lb-btns"><button class="ghost" id="lb-test">Testar agora</button><button class="ghost" id="lb-ics">Baixar para o calendário</button></div>
+      <p class="hint" style="margin:10px 0 0">Os avisos aparecem com o app aberto, mesmo em outra aba no computador. O app para de avisar quando você bate a meta do dia. Para lembretes com o app fechado, use o botão do calendário.</p>
+    </section>
+    
+    <section class="card" id="agua-dica" style="margin-top:14px">
+      <h2>Dica de água</h2>
+      <p class="dc-t" id="dc-t"></p>
+      <div class="dc-f"><span class="hint" id="dc-c" style="margin:0"></span><button class="ghost" id="dc-n">Outra dica</button></div>
+      <p class="hint" style="margin:10px 0 0">Uma dica nova por dia, sem repetir até acabar todas.</p>
+    </section>
     <section class="card" id="agua-hist" style="margin-top:14px" hidden></section>
     <p class="note">A meta é peso (kg) × 35 ml, uma referência geral (ex.: 70 kg × 35 ml = 2.450 ml), mais um extra pela frequência de exercício que você informou no perfil: 500 ml × (treinos por semana ÷ 7). Em dias de calor ou de treino, você pode precisar de mais. Quem tem doença renal ou cardíaca, ou orientação médica de limitar líquidos, deve seguir o que o médico indicar. O contador zera todo dia à meia-noite. No campo de quantidade, digite em ml (ex.: 250) ou em litros (ex.: 0,5).</p>
   </div>
@@ -470,7 +509,7 @@ window.perfilInfo=function(){
   /* Mifflin-St Jeor; sem informar o sexo usa a média dos dois (-78) */
   if(kg&&cm&&age){bmr=Math.round(10*kg+6.25*cm-5*age+(sx==="m"?5:sx==="f"?-161:-78));if(bmr>0)rp=Math.min(1.2,Math.max(.8,bmr/24/kg));else bmr=0;}
   var base=Math.round(kg*35),extra=kg&&fr?Math.round(fr/7*500):0;
-  return{kg:kg,cm:cm,age:age,sex:sx,freq:fr,bmr:bmr,rp:rp,base:base,extra:extra,water:kg?base+extra:0,done:!!p.done};
+  return{kg:kg,cm:cm,age:age,sex:sx,freq:fr,bmr:bmr,rp:rp,base:base,extra:extra,water:kg?base+extra:0,done:!!p.done,name:String(p.n||"").trim().slice(0,40)};
 };
 </script>
 <script>
@@ -832,6 +871,10 @@ window.perfilInfo=function(){
   /* Meta = peso (kg) x 35 ml. Ex.: 70 kg x 35 = 2.450 ml (2,45 L) */
   function plan(){var p=window.perfilInfo();return p.kg?{b:p,ml:p.water}:null;}
   function goal(){var p=plan();return p?p.ml:0;}
+  window.aguaInfo=function(){fresh();return{total:total(),goal:goal(),last:S.e.length?S.e[S.e.length-1].t:0};};
+  window.aguaAdd=function(ml){add(ml);};
+  window.aguaSom=function(){sound();};
+  window.aguaDesbloquear=function(){try{if(ac&&ac.state==="suspended")ac.resume();}catch(e){}};
   var wg=document.getElementById("wg"),wat=document.getElementById("wg-water"),stm=document.getElementById("wg-stream"),lbl=document.getElementById("wg-lbl"),lvY=150,fst=true;
   function level(pct,ok){var d=(1-pct/100)*140;lvY=14+d;wat.style.transform="translateY("+d.toFixed(1)+"px)";wg.classList.toggle("ok",!!ok);if(fst){fst=false;setTimeout(function(){wg.classList.remove("nt");},80);}}
   var ac=null,snd=true;
@@ -906,6 +949,9 @@ window.perfilInfo=function(){
   var N=function(n){return Math.round(n).toLocaleString("pt-BR");};
   var num=function(v){var x=parseFloat(String(v).replace(",","."));return isFinite(x)?x:0;};
   function raw(){try{return JSON.parse(localStorage.getItem("perfil-v1")||"null")||{};}catch(e){return{};}}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  var ol=document.getElementById("ola"),olaTxt=ol?ol.textContent:"";
+  function hello(){if(!ol)return;var n=window.perfilInfo().name;ol.textContent=n?"Olá, "+n+"! "+olaTxt:olaTxt;}
   function chips(list,cur,attr){return list.map(function(o){return '<button type="button" class="chip" '+attr+'="'+o[0]+'" aria-pressed="'+(String(cur)===String(o[0]))+'">'+o[1]+'</button>';}).join("");}
   function open(edit){var r=raw();st.f=(r.f===undefined||r.f===null||r.f==="")?null:+r.f;st.s=r.s||"";st.step=edit?1:0;st.slide=0;root.hidden=false;document.body.style.overflow="hidden";draw();}
   function close(){root.hidden=true;document.body.style.overflow="";}
@@ -939,6 +985,7 @@ window.perfilInfo=function(){
     var h="",p=window.perfilInfo();
     if(st.step===0)h=intro();
     else if(st.step===1)h='<h1>Sobre você</h1><p class="sub">Leva menos de um minuto.</p><section class="card">'+
+      '<div class="fq"><label for="pf-n">Como você se chama?</label><div class="inp"><input id="pf-n" style="font-size:1.7rem" autocomplete="given-name" maxlength="40" placeholder="Seu nome" value="'+esc(p.name)+'"></div></div>'+
       '<div class="fq"><label>Quantas vezes por semana você se exercita?</label><div class="chips" id="pf-f">'+chips([0,1,2,3,4,5,6,7].map(function(n){return [n,n];}),st.f,"data-f")+'</div></div>'+
       '<div class="fq"><label for="pf-w">Peso</label><div class="inp"><input id="pf-w" inputmode="decimal" autocomplete="off" placeholder="70" value="'+(p.kg||"")+'"><span class="unit">kg</span></div></div>'+
       '<div class="fq"><label for="pf-h">Altura</label><div class="inp"><input id="pf-h" inputmode="decimal" autocomplete="off" placeholder="175" value="'+(p.cm||"")+'"><span class="unit">cm</span></div></div>'+
@@ -947,7 +994,7 @@ window.perfilInfo=function(){
       '<p class="err" id="pf-err" role="alert"></p><button class="btn" data-a="go">Ver meu plano</button>'+(p.done?' <button class="ghost" data-a="close">Cancelar</button>':'')+'</section>';
     else{
       var fr=p.freq||0,fac=[1.2,1.375,1.375,1.55,1.55,1.725,1.725,1.9][fr],net=4*p.kg*.75,ses=net+p.rp*p.kg*.75,bmi=p.kg/Math.pow(p.cm/100,2);
-      h='<h1>Seu plano</h1><p class="sub">IMC '+bmi.toLocaleString("pt-BR",{maximumFractionDigits:1})+' · '+fr+(fr===1?' treino':' treinos')+' por semana</p><section class="card">'+
+      h='<h1>'+(p.name?'Seu plano, '+esc(p.name):'Seu plano')+'</h1><p class="sub">IMC '+bmi.toLocaleString("pt-BR",{maximumFractionDigits:1})+' · '+fr+(fr===1?' treino':' treinos')+' por semana</p><section class="card">'+
         '<div class="big"><span class="num">'+L(p.water)+'</span><span class="cat">litros de água por dia</span></div>'+
         '<ul class="rows"><li><span>Base (35 ml por kg)</span><span>'+L(p.base)+' L</span></li>'+(p.extra?'<li><span>Extra por exercício</span><span>+'+L(p.extra)+' L</span></li>':'')+
         '<li><span>Gasto em repouso</span><span>'+N(p.bmr)+' kcal/dia</span></li>'+
@@ -960,14 +1007,14 @@ window.perfilInfo=function(){
     root.innerHTML='<div class="wrap">'+h+'</div>';root.scrollTop=0;if(st.step===0&&st.slide===2)countUp();
   }
   function go(){
-    var w=num(document.getElementById("pf-w").value),hh=num(document.getElementById("pf-h").value),a=num(document.getElementById("pf-a").value),e=document.getElementById("pf-err");
+    var w=num(document.getElementById("pf-w").value),hh=num(document.getElementById("pf-h").value),a=num(document.getElementById("pf-a").value),e=document.getElementById("pf-err"),nm=document.getElementById("pf-n").value.trim().slice(0,40);
     if(hh>0&&hh<3)hh=Math.round(hh*100);
-    var m=st.f===null?"Escolha quantas vezes por semana você se exercita.":!(w>=10&&w<=400)?"Informe um peso entre 10 e 400 kg.":!(hh>=100&&hh<=250)?"Informe a altura em centímetros (ex.: 175).":!(a>=10&&a<=100)?"Informe uma idade entre 10 e 100 anos.":"";
+    var m=!nm?"Digite como você se chama.":st.f===null?"Escolha quantas vezes por semana você se exercita.":!(w>=10&&w<=400)?"Informe um peso entre 10 e 400 kg.":!(hh>=100&&hh<=250)?"Informe a altura em centímetros (ex.: 175).":!(a>=10&&a<=100)?"Informe uma idade entre 10 e 100 anos.":"";
     if(m){e.textContent=m;return;}
-    try{localStorage.setItem("perfil-v1",JSON.stringify({a:a,f:st.f,s:st.s,done:true}));localStorage.setItem("imc",JSON.stringify({w:String(w),h:String(hh)}));}catch(x){}
+    try{localStorage.setItem("perfil-v1",JSON.stringify({a:a,f:st.f,s:st.s,n:nm,done:true}));localStorage.setItem("imc",JSON.stringify({w:String(w),h:String(hh)}));}catch(x){}
     var W=document.getElementById("w"),H=document.getElementById("h");W.value=String(w);H.value=String(hh);
     W.dispatchEvent(new Event("input",{bubbles:true}));H.dispatchEvent(new Event("input",{bubbles:true}));
-    st.step=2;draw();
+    hello();st.step=2;draw();
   }
   root.addEventListener("click",function(ev){
     var b=ev.target.closest("button");if(!b)return;
@@ -976,7 +1023,9 @@ window.perfilInfo=function(){
     var a=b.dataset.a;if(a==="slide"){st.slide=+b.dataset.i;draw();}else if(a==="start"){st.step=1;draw();}else if(a==="go")go();else if(a==="close")close();
   });
   document.getElementById("open-perfil").addEventListener("click",function(){open(true);});
+  hello();
   if(!window.perfilInfo().done)open(false);
+  else if(!window.perfilInfo().name){var asked=false;try{asked=localStorage.getItem("nome-pedido")==="1";localStorage.setItem("nome-pedido","1");}catch(e){}if(!asked)open(true);}
 })();
 </script>
 <script>
@@ -1108,16 +1157,14 @@ window.perfilInfo=function(){
   function proj(lat,lon,z){var s=256*Math.pow(2,z),r=lat*Math.PI/180;return[(lon+180)/360*s,(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*s];}
   /* fontes de mapa: o usuário escolhe na aba Corrida; se uma falhar por erro de rede, usa a reserva */
   function lsget(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-  /* fonte escolhida: carto (padrão), esri ou mt. "osm" ficou de fora: os servidores públicos do OpenStreetMap bloqueiam apps (erro 403) */
-  function msrc(){var v=lsget("map-src");return v==="esri"||v==="mt"||v==="carto"?v:"carto";}
+  /* fonte escolhida: esri (padrão) ou mt (MapTiler, com chave). O CARTO saiu: passou a exigir chave e devolve ladrilhos com marca d'água. O OpenStreetMap ficou de fora: bloqueia apps (erro 403) */
+  function msrc(){var v=lsget("map-src");return v==="mt"?v:"esri";}
   function buildPV(){
     var src=msrc(),key=(lsget("map-key")||"").trim();
     var E={id:"esri",u:function(z,x,y){return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/"+z+"/"+y+"/"+x;},c:" inv",a:"© Esri © OpenStreetMap"};
-    var C={id:"carto",u:function(z,x,y){return "https://"+"abcd".charAt((x+y)%4)+".basemaps.cartocdn.com/dark_all/"+z+"/"+x+"/"+y+(window.devicePixelRatio>1?"@2x":"")+".png";},c:"",a:"© CARTO © OpenStreetMap"};
     var M={id:"mt",u:function(z,x,y){return "https://api.maptiler.com/maps/streets-v2-dark/"+z+"/"+x+"/"+y+(window.devicePixelRatio>1?"@2x":"")+".png?key="+encodeURIComponent(key);},c:"",a:"© MapTiler © OpenStreetMap"};
-    if(src==="mt"&&key)return [M,C,E];
-    if(src==="esri")return [E,C];
-    return [C,E];
+    if(src==="mt"&&key)return [M,E];
+    return [E];
   }
   var PV=buildPV(),pv=0,nf=0;
   function mk(z,x,y,lz){
@@ -1225,7 +1272,7 @@ window.perfilInfo=function(){
   function mapUI(){
     var s=msrc(),k=lsget("map-key")||"";
     cfg.innerHTML='<h2>Mapa</h2><p class="hint" style="margin:0 0 10px">Se o mapa aparecer em branco ou com avisos, troque a fonte.</p><div class="seg" role="group" aria-label="Fonte do mapa">'+
-      [["carto","CARTO"],["esri","Esri"],["mt","MapTiler"]].map(function(o){return '<button data-ms="'+o[0]+'" aria-pressed="'+(s===o[0])+'">'+o[1]+'</button>';}).join("")+'</div>'+
+      [["esri","Esri"],["mt","MapTiler"]].map(function(o){return '<button data-ms="'+o[0]+'" aria-pressed="'+(s===o[0])+'">'+o[1]+'</button>';}).join("")+'</div>'+
       (s==="mt"?'<label for="map-k" style="margin-top:14px">Chave do MapTiler</label><input id="map-k" class="fld wide" autocomplete="off" placeholder="Cole a chave aqui" value="'+k.replace(/"/g,"")+'"><p class="hint">Chave grátis em cloud.maptiler.com, no menu Account, API keys. Sem a chave, o app usa o Esri.</p>':'');
   }
   function mapApply(){PV=buildPV();pv=0;nf=0;tl={};mapOk=false;mapBad=false;clearTimeout(mapT);mapT=null;paint();thumbs();}
@@ -1354,9 +1401,9 @@ window.perfilInfo=function(){
     else if(a==="tray"){if(st==="idle"){tray=true;paint();}}else if(a==="big")setBig(true);else if(a==="small")setBig(false);
     else if(a==="manual"){setFs(false);var mi=$("run-d");if(mi){mi.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(function(){try{mi.focus({preventScroll:true});}catch(e){}},400);}}
     else if(a==="layers"){
-      var cur=msrc(),key=(lsget("map-key")||"").trim(),ord=key?["carto","esri","mt"]:["carto","esri"],nm={carto:"CARTO",esri:"Esri",mt:"MapTiler"},nx=ord[(ord.indexOf(cur)+1)%ord.length];
+      var cur=msrc(),key=(lsget("map-key")||"").trim(),ord=key?["esri","mt"]:["esri"],nm={esri:"Esri",mt:"MapTiler"},nx=ord[(ord.indexOf(cur)+1)%ord.length];
       try{localStorage.setItem("map-src",nx);}catch(e){}mapUI();mapApply();
-      flashUntil=Date.now()+1800;setTimeout(function(){var n=$("g-i");if(n){n.textContent="Mapa: "+nm[nx];setTimeout(function(){var n2=$("g-i");if(n2)n2.textContent=chipTxt;},1800);}},40);
+      flashUntil=Date.now()+1800;setTimeout(function(){var n=$("g-i");if(n){n.textContent="Mapa: "+nm[nx]+(ord.length<2?" (única fonte)":"");setTimeout(function(){var n2=$("g-i");if(n2)n2.textContent=chipTxt;},1800);}},40);
     }
     else if(a==="locate"){askCmp();if(st==="idle"||st==="run"){info="Atualizando posição...";var n3=$("g-i");if(n3)n3.textContent=info;watch();}drawMap();}
     else if(a==="rec"){S=rec;rec=null;S.last=null;st="pause";paint();}
@@ -1393,6 +1440,108 @@ window.perfilInfo=function(){
   document.querySelectorAll("[data-tema]").forEach(function(b){b.addEventListener("click",function(){try{localStorage.setItem("tema",b.dataset.tema);}catch(e){}apply();});});
   if(mq&&mq.addEventListener)mq.addEventListener("change",apply);
   apply();
+})();
+</script>
+<script>
+(function(){
+  var T=["Beba um copo logo ao acordar, antes do café: depois de horas sem beber, é um ótimo jeito de começar o dia.", "Deixe uma garrafa sempre à vista, na mesa de trabalho ou ao lado da cama: o que está ao alcance da mão a gente bebe.", "Ligue a água a hábitos que você já tem: um copo ao escovar os dentes, ao abrir o computador e ao voltar do banheiro.", "Programe um alarme a cada duas horas com a mensagem: um golinho. Em poucos dias, você nem precisa mais dele.", "Divida a meta do dia em partes: metade até o almoço e o resto à tarde e à noite. Aqui no app você vê quanto falta.", "Beba devagar, em goles pequenos, e segure o primeiro gole um instante na boca antes de engolir. Você sente melhor a água e bebe com mais calma.", "Não espere a sede apertar: beba aos poucos ao longo do dia, sem deixar a boca secar.", "Evite tomar litros de uma vez só. Em goles distribuídos, o corpo aproveita melhor e o estômago agradece.", "Esquece de beber? Troque o copo por uma garrafa com bico ou canudo: quanto mais fácil, mais você bebe.", "Sente-se para tomar um copo inteiro, sem celular na mão. Em um minuto você faz uma pausa e ainda se hidrata.", "Coloque rodelas de limão, laranja ou pepino na jarra: o sabor leve faz muita gente beber mais.", "Folhas de hortelã ou fatias de gengibre deixam a água com sabor, sem açúcar e sem calorias.", "Congele uvas ou morangos e use no lugar do gelo: a água fica gelada, bonita e com um toque de fruta.", "Enjoou de água pura? A água com gás sem açúcar é uma boa mudança de ritmo.", "Chás e infusões sem açúcar também entram na conta do dia. Só cuidado com os que têm cafeína perto da hora de dormir.", "Melancia, pepino, laranja e morango têm muita água. Comer frutas também ajuda a se hidratar.", "A melhor temperatura é a que você realmente bebe: se a água gelada pesa, deixe uma garrafa em temperatura ambiente.", "Olhe a cor da urina: amarelo bem clarinho costuma indicar boa hidratação, e bem escuro é um sinal para beber mais.", "Boca seca, cansaço e uma dor de cabeça leve podem ser sinais de pouca água. Se continuarem mesmo bebendo, procure um profissional de saúde.", "Com febre, vômito ou diarreia o corpo perde mais líquido. Beba aos poucos e, se houver sinais fortes de desidratação, procure atendimento.", "Chegue ao treino já hidratado: beba um ou dois copos nas horas anteriores, e não só na hora de começar.", "Em treinos longos, leve a garrafa e beba goles curtos a cada 15 a 20 minutos, em vez de um copo enorme de uma vez.", "Na musculação, tome um gole pequeno entre as séries. Assim você não fica pesado nem estufado.", "Pese-se antes e depois de um treino longo: a diferença é quase toda água perdida no suor e mostra quanto repor nas horas seguintes.", "Em corridas longas com muito suor, só água em excesso não é o ideal. Uma bebida com eletrólitos ou um pouco de sal na refeição ajuda.", "Deixe a garrafa pronta e gelada na noite anterior ao treino. Uma tarefa a menos na hora de sair de casa.", "Terminou o treino? Registre a água aqui no app logo em seguida, e a meta do dia rende mais.", "Calor, ar-condicionado, vento seco e altitude aumentam a perda de líquido. Nesses dias, beba um pouco além do habitual.", "Em viagem de avião ou de carro, tome um copinho a cada hora. O ar seco e a rotina diferente fazem a gente esquecer de beber.", "Alterne cada bebida alcoólica com um copo de água. Você bebe menos álcool e acorda melhor no dia seguinte.", "Comida bem salgada dá mais sede, e isso é normal. Reforce a água no resto do dia.", "Bateu vontade de um café fora de hora? Beba um copo de água primeiro e veja se a vontade continua.", "Se você acorda à noite para ir ao banheiro, concentre a água mais cedo e beba menos nas duas horas antes de dormir.", "Leve a garrafa junto com chaves, carteira e celular: se ela sai de casa com você, você bebe mais pelo caminho.", "Leve um copo para reuniões e aulas. Parado e sentado, é fácil passar horas sem beber nada.", "Marque na garrafa, com fita ou adesivo, a meta de cada período do dia. Ver o nível descer é uma boa motivação.", "Escolha um copo ou uma garrafa de que você goste de verdade. Parece bobagem, mas ajuda a criar o hábito.", "Faça um desafio com um amigo: quem fechar a meta de água em mais dias na semana ganha uma playlist nova.", "Fechou a meta por sete dias seguidos? Comemore com algo que não seja comida, como um passeio ou um episódio da sua série favorita.", "Anote como você se sentiu nos dias em que bateu a meta: sono, disposição, foco. Perceber a diferença motiva a continuar.", "Encha a garrafa de manhã e tente esvaziá-la até o almoço. Encha de novo e termine até o fim da tarde.", "Beba um copo antes de cada refeição principal: é fácil de lembrar e já garante uma parte da meta do dia.", "Gestantes, mulheres que amamentam, idosos e crianças têm necessidades diferentes. Pergunte ao médico a quantidade ideal.", "Quem tem problema nos rins ou no coração, ou orientação médica para limitar líquidos, deve seguir o médico e não a meta do app.", "Prefira uma garrafa reutilizável: você evita plástico descartável e tem a água sempre por perto, onde estiver."];
+  var K="dicas-v1",box=document.getElementById("dc-t"),cnt=document.getElementById("dc-c"),btn=document.getElementById("dc-n"),S=null;
+  function today(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+  function idx(){var a=[],i;for(i=0;i<T.length;i++)a.push(i);return a;}
+  function shuffle(a,avoid){var b=a.slice(),i,j,t;for(i=b.length-1;i>0;i--){j=Math.floor(Math.random()*(i+1));t=b[i];b[i]=b[j];b[j]=t;}if(avoid!==undefined&&b[0]===avoid&&b.length>1){t=b[0];b[0]=b[1];b[1]=t;}return b;}
+  function load(){try{S=JSON.parse(localStorage.getItem(K)||"null");}catch(e){S=null;}if(!S||!S.o||S.o.length!==T.length||!(S.p>=0&&S.p<S.o.length))S={o:shuffle(idx()),p:0,d:today()};}
+  function save(){try{localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
+  function next(){S.p++;if(S.p>=S.o.length){var last=S.o[S.o.length-1];S.o=shuffle(idx(),last);S.p=0;}}
+  function show(anim){box.textContent=T[S.o[S.p]];cnt.textContent="Dica "+(S.p+1)+" de "+T.length;if(anim){box.classList.remove("dc-in");void box.offsetWidth;box.classList.add("dc-in");}}
+  load();
+  if(S.d!==today()){S.d=today();next();}
+  save();show(false);
+  btn.addEventListener("click",function(){next();save();show(true);});
+})();
+</script>
+<div id="lb-ban" class="lb-ban" role="alert" hidden></div>
+<script>
+(function(){
+  var K="lembrete-v1",C={on:false,m:120,a:8,b:22},nextAt=0,pend="",banT=null;
+  try{var q=JSON.parse(localStorage.getItem(K)||"null");if(q&&typeof q==="object"){C.on=!!q.on;C.m=[30,60,90,120,180].indexOf(q.m)>-1?q.m:120;C.a=q.a>=0&&q.a<24?+q.a:8;C.b=q.b>=0&&q.b<24?+q.b:22;}}catch(e){}
+  var $=function(id){return document.getElementById(id);};
+  var tog=document.querySelectorAll("[data-lb]"),opt=$("lb-opt"),sg=document.querySelector(".lb-seg"),sa=$("lb-a"),sb=$("lb-b"),st=$("lb-st"),ban=$("lb-ban");
+  var L=function(ml){return (ml/1000).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});};
+  var hh=function(h){return (h<10?"0":"")+h+":00";};
+  function save(){try{localStorage.setItem(K,JSON.stringify(C));}catch(e){}}
+  function info(){return window.aguaInfo?window.aguaInfo():{total:0,goal:0,last:0};}
+  function perm(){return window.Notification?Notification.permission:"unsupported";}
+  function inHours(d){var h=d.getHours()+d.getMinutes()/60;return C.a===C.b?true:C.a<C.b?(h>=C.a&&h<C.b):(h>=C.a||h<C.b);}
+  function body(){var i=info();return i.goal&&i.total<i.goal?"Faltam "+L(i.goal-i.total)+" L para a sua meta de hoje.":"Que tal um copo de água agora?";}
+  function nx(){var d=new Date(Math.max(nextAt,Date.now()));return inHours(d)?"por volta de "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"a partir das "+hh(C.a);}
+  function ui(msg){
+    Array.prototype.forEach.call(tog,function(b){b.setAttribute("aria-pressed",(b.dataset.lb==="1")===C.on);});
+    opt.hidden=!C.on;
+    sg.innerHTML=[[30,"30 min"],[60,"1 h"],[90,"1h30"],[120,"2 h"],[180,"3 h"]].map(function(o){return '<button data-mm="'+o[0]+'" aria-pressed="'+(C.m===o[0])+'">'+o[1]+'</button>';}).join("");
+    var p=perm();
+    st.textContent=msg||(C.on?(p==="granted"?"Ligado: notificação do sistema e aviso na tela, com som. ":p==="denied"?"As notificações do sistema estão bloqueadas neste navegador; você recebe o aviso na tela, com som. ":p==="unsupported"?"Este navegador não mostra notificações do sistema; você recebe o aviso na tela, com som. ":"Permita as notificações quando o navegador perguntar. ")+"Próximo aviso "+nx()+".":"Lembretes desligados.");
+  }
+  function askPerm(){if(window.Notification&&Notification.permission==="default"){try{var r=Notification.requestPermission(function(){ui();});if(r&&r.then)r.then(function(){ui();});}catch(e){}}}
+  function unlock(){if(window.aguaDesbloquear)window.aguaDesbloquear();}
+  function banner(t){
+    ban.innerHTML='<strong>Hora de beber água</strong><span>'+t+'</span><div><button class="go" data-b="200">Bebi 200 ml</button><button data-b="later">Depois</button></div>';
+    ban.hidden=false;clearTimeout(banT);banT=setTimeout(function(){ban.hidden=true;},90000);
+  }
+  function sys(t){
+    if(perm()!=="granted")return;
+    try{var n=new Notification("Hora de beber água",{body:t,tag:"agua-lembrete"});n.onclick=function(){try{window.focus();}catch(e){}n.close();};}catch(e){}
+  }
+  function fire(){
+    var t=body();
+    if(window.aguaSom)window.aguaSom();
+    try{if(navigator.vibrate)navigator.vibrate([150,80,150]);}catch(e){}
+    if(document.visibilityState==="visible")banner(t);else{pend=t;sys(t);}
+  }
+  function tick(){
+    if(!C.on)return;
+    var now=Date.now(),i=info();
+    if(i.last)nextAt=Math.max(nextAt,i.last+C.m*60000);
+    if(now<nextAt||!inHours(new Date(now)))return;
+    if(i.goal&&i.total>=i.goal){nextAt=now+C.m*60000;return;}
+    fire();nextAt=now+C.m*60000;ui();
+  }
+  function ics(){
+    var d=new Date(),p2=function(n){return (n<10?"0":"")+n;},hm=function(t){t=Math.min(t,1439);return p2(Math.floor(t/60))+p2(t%60)+"00";};
+    var ymd=d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate()),stamp=d.getUTCFullYear()+p2(d.getUTCMonth()+1)+p2(d.getUTCDate())+"T"+p2(d.getUTCHours())+p2(d.getUTCMinutes())+p2(d.getUTCSeconds())+"Z";
+    var step=Math.max(60,C.m),endm=(C.b>C.a?C.b:24)*60,n=0,t,ln=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//IMC e treino//Lembretes de agua//PT","CALSCALE:GREGORIAN"];
+    for(t=C.a*60;t<endm&&n<16;t+=step,n++){
+      ln.push("BEGIN:VEVENT","UID:agua-"+n+"-"+ymd+"@imc-e-treino","DTSTAMP:"+stamp,"DTSTART:"+ymd+"T"+hm(t),"DTEND:"+ymd+"T"+hm(t+5),"RRULE:FREQ=DAILY;COUNT=60","SUMMARY:Hora de beber água","DESCRIPTION:Um copo de água agora.","BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Hora de beber água","TRIGGER:PT0S","END:VALARM","END:VEVENT");
+    }
+    ln.push("END:VCALENDAR");
+    try{
+      var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ln.join("\r\n")],{type:"text/calendar;charset=utf-8"}));a.download="lembretes-agua.ics";
+      document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},800);
+      ui(n+" lembretes diários criados (por 60 dias). Abra o arquivo para adicionar ao calendário do celular; o alarme toca mesmo com o app fechado.");
+    }catch(e){ui("Não consegui gerar o arquivo neste navegador. Tente abrir a página direto no navegador do celular.");}
+  }
+
+  var i0;for(i0=0;i0<24;i0++){sa.innerHTML+='<option value="'+i0+'">'+hh(i0)+'</option>';sb.innerHTML+='<option value="'+i0+'">'+hh(i0)+'</option>';}
+  sa.value=String(C.a);sb.value=String(C.b);
+  if(C.on)nextAt=Math.max(Date.now(),info().last||0)+C.m*60000;
+  Array.prototype.forEach.call(tog,function(b){b.addEventListener("click",function(){
+    C.on=b.dataset.lb==="1";save();
+    if(C.on){nextAt=Date.now()+C.m*60000;unlock();if(window.aguaSom)window.aguaSom();askPerm();}else ban.hidden=true;
+    ui();
+  });});
+  sg.addEventListener("click",function(ev){var b=ev.target.closest("[data-mm]");if(!b)return;C.m=+b.dataset.mm;nextAt=Math.max(Date.now(),info().last||0)+C.m*60000;save();ui();});
+  sa.addEventListener("change",function(){C.a=+sa.value;save();ui();});
+  sb.addEventListener("change",function(){C.b=+sb.value;save();ui();});
+  $("lb-test").addEventListener("click",function(){unlock();askPerm();if(window.aguaSom)window.aguaSom();var t="Teste: "+body();banner(t);sys(t);});
+  $("lb-ics").addEventListener("click",ics);
+  ban.addEventListener("click",function(ev){
+    var b=ev.target.closest("[data-b]");if(!b)return;
+    if(b.dataset.b==="later")nextAt=Date.now()+15*60000;else if(window.aguaAdd)window.aguaAdd(+b.dataset.b);
+    ban.hidden=true;ui();
+  });
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&pend){banner(pend);pend="";}});
+  document.addEventListener("pointerdown",unlock,{passive:true});
+  setInterval(tick,20000);
+  ui();
 })();
 </script>
 </body>
