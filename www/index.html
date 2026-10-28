@@ -318,6 +318,40 @@ body{transition:background-color .25s,color .25s}
 .gb-foot{flex:none}
 .gb-foot .gr-msg{margin:0 12px 10px}
 @media (prefers-reduced-motion:reduce){.gp-stage.full.gb-anim,.gp-stage.full.gr-big.gb-anim{animation:none}}
+
+/* ===== Bandeja de tipo de atividade (corrida / caminhada) ===== */
+.gr-tray{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;animation:gbFade .2s ease-out both}
+.gr-tsheet{width:100%;background:#1b1b1b;border-radius:24px 24px 0 0;padding:10px 14px calc(18px + max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px)));animation:gbUp .28s cubic-bezier(.2,.8,.2,1) both}
+.gr-tt{text-align:center;font-weight:700;color:#e8e8e8;margin:0 0 10px}
+.gr-opt{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:16px;color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer;touch-action:manipulation}
+.gr-opt+.gr-opt{margin-top:6px}
+.gr-opt.on{background:rgba(79,194,176,.16)}
+.gr-opt:focus-visible{outline:2px solid #4fc2b0;outline-offset:2px}
+.gr-oi{width:48px;height:48px;border-radius:50%;background:#3a3a3a;display:grid;place-items:center;flex:none}
+.gr-opt.on .gr-oi{background:rgba(79,194,176,.22)}
+.gr-opt .chk{margin-left:auto;width:24px;height:24px;border-radius:50%;background:#4fc2b0;display:grid;place-items:center}
+@media (prefers-reduced-motion:reduce){.gr-tray,.gr-tsheet{animation:none}}
+
+/* ===== Bonequinho animado (corrida / caminhada) ===== */
+.fg{overflow:visible;display:block}
+.fg .far{opacity:.5}
+.fg.run{--d:.62s}.fg.walk{--d:1.1s}
+.fg.run .fg-up{transform:rotate(12deg)}
+.fg.walk .fg-up{transform:rotate(3deg)}
+.fg *{animation-duration:var(--d);animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-delay:var(--p,0s)}
+.fg.run .fg-bob{animation-name:fgRB}.fg.run .fg-t{animation-name:fgRT}.fg.run .fg-s{animation-name:fgRS}.fg.run .fg-a{animation-name:fgRA}.fg.run .fg-f{animation-name:fgRF}
+.fg.walk .fg-bob{animation-name:fgWB}.fg.walk .fg-t{animation-name:fgWT}.fg.walk .fg-s{animation-name:fgWS}.fg.walk .fg-a{animation-name:fgWA}.fg.walk .fg-f{animation-name:fgWF}
+@keyframes fgRB{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1.1px)}}
+@keyframes fgRT{0%,100%{transform:rotate(-55deg)}50%{transform:rotate(32deg)}}
+@keyframes fgRS{0%,100%{transform:rotate(40deg)}25%{transform:rotate(5deg)}50%{transform:rotate(100deg)}85%{transform:rotate(95deg)}}
+@keyframes fgRA{0%,100%{transform:rotate(55deg)}50%{transform:rotate(-55deg)}}
+@keyframes fgRF{0%,100%{transform:rotate(-70deg)}50%{transform:rotate(-95deg)}}
+@keyframes fgWB{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-.5px)}}
+@keyframes fgWT{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(24deg)}}
+@keyframes fgWS{0%,100%{transform:rotate(4deg)}25%{transform:rotate(0deg)}50%{transform:rotate(8deg)}75%{transform:rotate(45deg)}}
+@keyframes fgWA{0%,100%{transform:rotate(24deg)}50%{transform:rotate(-24deg)}}
+@keyframes fgWF{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(-28deg)}}
+@media (prefers-reduced-motion:reduce){.fg *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -724,7 +758,7 @@ window.perfilInfo=function(){
     out.innerHTML=h+(msg?'<p class="empty" role="status">'+msg+'</p>':'');
   }
   var lim=10,cf=-1;
-  function ttl(t){var h=new Date(t).getHours();return "Corrida "+(h<5?"de madrugada":h<12?"da manhã":h<17?"da tarde":h<19?"do fim de tarde":"da noite");}
+  function ttl(t,tp){var h=new Date(t).getHours();return (tp==="w"?"Caminhada ":"Corrida ")+(h<5?"de madrugada":h<12?"da manhã":h<17?"da tarde":h<19?"do fim de tarde":"da noite");}
   function when(t){var d=new Date(t);return d.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"})+" às "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});}
   function dur(s){var h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return h?h+"h "+(m<10?"0":"")+m+"min":m+"min "+(r<10?"0":"")+r+"s";}
   function priv(){try{var v=localStorage.getItem("run-priv");return v===null?200:Math.max(0,+v||0);}catch(e){return 200;}}
@@ -739,17 +773,17 @@ window.perfilInfo=function(){
     if(x.gain)ch.push("+"+fmt(x.gain)+" m de subida");
     if(x.max!=null)ch.push("máx. "+fmt(x.max)+" m");
     ch.push(x.rt?"GPS":"Manual");
-    return '<article class="card fd"><div class="fd-h"><div><h3>'+ttl(x.t)+'</h3><span class="fd-d">'+when(x.t)+'</span></div>'+
+    return '<article class="card fd"><div class="fd-h"><div><h3>'+ttl(x.t,x.tp)+'</h3><span class="fd-d">'+when(x.t)+'</span></div>'+
       (cf===o.i?'<button class="ghost" data-del="'+o.i+'">Excluir?</button>':'<button class="del" data-del="'+o.i+'" aria-label="Excluir corrida">✕</button>')+'</div>'+
       '<div class="fd-s"><div><div class="fd-l2">Distância</div><div class="fd-v">'+fmt(x.d,2)+' km</div></div><div><div class="fd-l2">Ritmo</div><div class="fd-v">'+pace(x.s,x.d)+' /km</div></div><div><div class="fd-l2">Tempo</div><div class="fd-v">'+dur(x.s)+'</div></div></div>'+
       (x.rt?'<div class="fd-map" data-i="'+o.i+'"></div>':'')+
       '<div class="fd-x">'+ch.map(function(c){return '<span class="fd-c">'+c+'</span>';}).join("")+'</div></article>';
   }
   function renderHist(){
-    if(!R.length){hist.innerHTML='<section class="card"><h2>Suas corridas</h2><p class="empty" style="margin:0">Suas corridas aparecem aqui, com o trajeto que você fez no mapa.</p></section>';return;}
+    if(!R.length){hist.innerHTML='<section class="card"><h2>Suas atividades</h2><p class="empty" style="margin:0">Suas corridas e caminhadas aparecem aqui, com o trajeto que você fez no mapa.</p></section>';return;}
     var km=0,kc=0;R.forEach(function(x){km+=x.d;kc+=x.kcal||0;});
     var items=R.map(function(x,i){return{x:x,i:i};}).reverse().slice(0,lim);
-    hist.innerHTML='<div><h2 class="fd-t">Suas corridas</h2><p class="hint" style="margin:0">Total: <strong>'+fmt(km,1)+' km</strong>'+(kc?' e <strong>'+fmt(kc)+' kcal</strong> queimadas':'')+' em '+R.length+(R.length===1?' corrida':' corridas')+'.</p>'+privCtl()+'</div>'+
+    hist.innerHTML='<div><h2 class="fd-t">Suas atividades</h2><p class="hint" style="margin:0">Total: <strong>'+fmt(km,1)+' km</strong>'+(kc?' e <strong>'+fmt(kc)+' kcal</strong> queimadas':'')+' em '+R.length+(R.length===1?' atividade':' atividades')+'.</p>'+privCtl()+'</div>'+
       items.map(card).join("")+(R.length>lim?'<button class="ghost" data-more="1">Mostrar mais</button>':'');
     if(window.runThumbs)window.runThumbs();
   }
@@ -955,6 +989,8 @@ window.perfilInfo=function(){
   var clk3=function(t){t=Math.round(t);var z=function(n){return (n<10?"0":"")+n;};return z(Math.floor(t/3600))+":"+z(Math.floor(t%3600/60))+":"+z(t%60);};
   var clk=function(t){t=Math.round(t);var h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60,z=function(n){return (n<10?"0":"")+n;};return (h?h+":":"")+z(m)+":"+z(s);};
   var S=null,st="idle",wid=null,tm=null,tk=0,wl=null,info="",err="",ok="",rec=null,pos=null,denied=false,tl={},acc=0,lowW=false;
+  var kind="r",tray=false;try{if(localStorage.getItem("gps-tipo")==="w")kind="w";}catch(e){}
+  var tn=function(k){return k==="w"?{N:"Caminhada",n:"caminhada"}:{N:"Corrida",n:"corrida"};};
   var fs=false,big=false,anim=false,hd=null,hdAt=0,cmp=null,cmpOn=false,mapOk=false,mapBad=false,mapT=null,chipTxt="",flashUntil=0,lastCmp=0,BGP=null,nOn=false;
   /* direção: o GPS informa quando você está em movimento; parado, usa a bússola do aparelho */
   function brg(a,b){var r=Math.PI/180,y=Math.sin((b.lon-a.lon)*r)*Math.cos(b.lat*r),x=Math.cos(a.lat*r)*Math.sin(b.lat*r)-Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r);return (Math.atan2(y,x)/r+360)%360;}
@@ -968,13 +1004,13 @@ window.perfilInfo=function(){
   function nstart(){
     var P=nbg();if(!P){onErr({code:2});return;}
     nOn=true;
-    P.start({backgroundTitle:"Corrida em andamento",backgroundMessage:"O GPS está gravando o seu trajeto.",requestPermissions:true,stale:false,distanceFilter:0},function(l,e){
+    P.start({backgroundTitle:tn(S&&S.k).N+" em andamento",backgroundMessage:"O GPS está gravando o seu trajeto.",requestPermissions:true,stale:false,distanceFilter:0},function(l,e){
       if(e){onErr({code:e.code==="NOT_AUTHORIZED"?1:2});return;}
       if(!l)return;
       onPos({timestamp:l.time||Date.now(),coords:{latitude:l.latitude,longitude:l.longitude,altitude:l.altitude,accuracy:l.accuracy,altitudeAccuracy:l.altitudeAccuracy,heading:l.bearing,speed:l.speed}});
     }).catch(function(){onErr({code:2});});
   }
-  function setFs(v){fs=v;if(!v)big=false;document.documentElement.style.overflow=v?"hidden":"";if(v)askCmp();paint();}
+  function setFs(v){fs=v;if(!v){big=false;tray=false;}document.documentElement.style.overflow=v?"hidden":"";if(v)askCmp();paint();}
   function setBig(v){if(big===v)return;big=v;anim=true;paint();}
   try{var q=JSON.parse(localStorage.getItem(TMP)||"null");if(q&&q.S&&q.S.d>0.02&&Date.now()-q.at<432e5)rec=q.S;}catch(e){}
 
@@ -1045,7 +1081,7 @@ window.perfilInfo=function(){
 
   function start(){
     if(!nat()&&!navigator.geolocation){err="Este navegador não oferece acesso ao GPS.";paint();return;}askCmp();
-    S={pts:[],rec:[],aw:[],d:0,acc:0,t0:Date.now(),last:null,ref:null,gain:0,max:null,sp:[],nk:1,ls:0,t:Date.now()};
+    S={k:kind,pts:[],rec:[],aw:[],d:0,acc:0,t0:Date.now(),last:null,ref:null,gain:0,max:null,sp:[],nk:1,ls:0,t:Date.now()};
     denied=false;st="run";err="";ok="";info="Buscando sinal GPS...";watch();lock(true);ticking(true);paint();
   }
   function pause(){S.acc=el();st="pause";stopW();lock(false);ticking(false);tmp();paint();}
@@ -1053,19 +1089,19 @@ window.perfilInfo=function(){
   function finish(){
     if(st==="run")S.acc=el();
     stopW();lock(false);ticking(false);
-    if(S.d<0.02){err="Corrida muito curta para ser registrada (menos de 20 m).";S=null;st="idle";clr();paint();return;}
+    if(S.d<0.02){err=tn(S.k).N+" muito curta para ser registrada (menos de 20 m).";S=null;st="idle";clr();paint();return;}
     st="done";err="";clr();paint();
   }
   function drop(){rec=null;S=null;st="idle";err="";ticking(false);stopW();lock(false);clr();paint();}
   function saveRun(){
     var e=Math.round(S.acc/1000),k=window.runKcal?window.runKcal(S.d,e):null;
     var P=S.pts,sp=Math.max(1,Math.ceil(P.length/160)),rt=P.filter(function(p,i){return i%sp===0||i===P.length-1;}).map(function(p){return[+p.lat.toFixed(5),+p.lon.toFixed(5)];});
-    var r={t:S.t,d:Math.round(S.d*100)/100,s:e,kcal:k?k.kcal:0,gain:Math.round(S.gain),max:S.max===null?null:Math.round(S.max),gps:1,rt:rt},L=[];
+    var r={t:S.t,tp:S.k||"r",d:Math.round(S.d*100)/100,s:e,kcal:k?k.kcal:0,gain:Math.round(S.gain),max:S.max===null?null:Math.round(S.max),gps:1,rt:rt},L=[];
     try{L=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(L))L=[];}catch(x){}
     L.push(r);L=L.slice(-200);
     try{localStorage.setItem(KEY,JSON.stringify(L));}catch(x){}
     window.dispatchEvent(new Event("corrida-changed"));
-    S=null;st="idle";clr();ok="Corrida salva! Ela já aparece no feed logo abaixo, com o trajeto no mapa.";setFs(false);
+    var kn=tn(S.k).N;S=null;st="idle";clr();ok=kn+" salva! Ela já aparece no feed logo abaixo, com o trajeto no mapa.";setFs(false);
   }
 
   var Zv=17;
@@ -1214,9 +1250,18 @@ window.perfilInfo=function(){
     run:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4fc2b0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="15.5" cy="4.5" r="1.9" fill="#4fc2b0"/><path d="M7.5 21l3.2-6.2 3.3 2.4v4.8M10.7 14.8l-1.2-4.3 4.6-2 2.1 3.2 3 .9M9.5 10.5l-3.3 1.2"/></svg>',
     exp:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#e4e4e4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
     edit:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19.5 8.5l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>',
+    walk:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4fc2b0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="4.5" r="1.9" fill="#4fc2b0"/><path d="M13 8l-1.5 5 3 3.5V21M11.5 13l-2 4.5L7.5 21M13 8.8l3.3 2.2M13 8.8l-3 2.4"/></svg>',
     col:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M10 14l-7 7M14 10l7-7"/></svg>',
     x:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
   };
+  IC.run=fig("r");IC.walk=fig("w");
+  /* bonequinho de traços: cada membro tem duas partes (coxa/canela, braço/antebraço) que balançam em fases opostas */
+  function fig(k){
+    var r=k==="r",h=r?"-.31s":"-.55s";
+    function leg(far){return '<g class="fg-t'+(far?' far':'')+'" style="transform-origin:12px 14px;--p:'+(far?h:'0s')+'"><line x1="12" y1="14" x2="12" y2="17.6"/><g class="fg-s" style="transform-origin:12px 17.6px"><line x1="12" y1="17.6" x2="12" y2="21.2"/></g></g>';}
+    function arm(far){return '<g class="fg-a'+(far?' far':'')+'" style="transform-origin:12px 8.5px;--p:'+(far?h:'0s')+'"><line x1="12" y1="8.5" x2="12" y2="11.7"/><g class="fg-f" style="transform-origin:12px 11.7px"><line x1="12" y1="11.7" x2="12" y2="14.7"/></g></g>';}
+    return '<svg class="fg '+(r?'run':'walk')+'" viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#4fc2b0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="fg-bob">'+leg(true)+'<g class="fg-up" style="transform-origin:12px 14px">'+arm(true)+'<line x1="12" y1="8" x2="12" y2="14"/><circle cx="12" cy="4.6" r="1.9" fill="#4fc2b0" stroke="none"/>'+arm(false)+'</g>'+leg(false)+'</g></svg>';
+  }
   function lowMsg(){
     var ua=navigator.userAgent||"",ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),and=/Android/i.test(ua)||nat(),m=Math.round(acc),run=st==="run"||st==="pause";
     var pre=run?'Sem precisão suficiente para gravar (±'+m+' m): a corrida só marca distância quando o erro fica abaixo de 35 m. ':'O GPS está impreciso (±'+m+' m). ';
@@ -1224,38 +1269,48 @@ window.perfilInfo=function(){
     if(ios)return pre+'Ative a Localização Precisa: Ajustes, Privacidade e Segurança, Serviços de Localização, Safari (Sites).';
     return pre+'No Android: ligue a Localização nas configurações rápidas, escolha o modo de alta precisão e, em Configurações > Apps > '+(nat()?'IMC e Treino':'Chrome')+' > Permissões > Localização, ative "Usar localização precisa". Depois vá para um local aberto.';
   }
+  function actBtn(k,btn){
+    var inner=(k==="w"?IC.walk:IC.run)+'<i class="chk">'+IC.chk+'</i>';
+    return btn?'<button class="gr-c act" data-g="tray" aria-haspopup="dialog" aria-label="Tipo de atividade: '+tn(k).N+'. Toque para trocar">'+inner+'</button>':'<div class="gr-c act">'+inner+'</div>';
+  }
+  function trayHtml(){
+    if(!tray)return "";
+    var o=[["r","Corrida",IC.run],["w","Caminhada",IC.walk]];
+    return '<div class="gr-tray" data-g="trayx"><div class="gr-tsheet" role="dialog" aria-label="Tipo de atividade"><div class="gr-handle"></div><div class="gr-tt">Tipo de atividade</div>'+
+      o.map(function(x){var on=kind===x[0];return '<button class="gr-opt'+(on?' on':'')+'" data-k="'+x[0]+'" aria-pressed="'+on+'"><span class="gr-oi">'+x[2]+'</span><span>'+x[1]+'</span>'+(on?'<i class="chk">'+IC.chk+'</i>':'')+'</button>';}).join("")+'</div></div>';
+  }
   function it(inner,label,cls){return '<div class="gr-it">'+inner+'<span'+(cls?' class="'+cls+'"':'')+'>'+label+'</span></div>';}
   function cbtn(g,icon,big,aria){return '<button class="gr-c'+(big?' big':'')+'" data-g="'+g+'" aria-label="'+aria+'">'+icon+'</button>';}
   var ACT='<div class="gr-c act">'+IC.run+'<i class="chk">'+IC.chk+'</i></div>';
   var HOLD='<button class="gr-c gr-hold" data-hold="1" aria-label="Segure para finalizar a corrida"><svg class="gr-ring" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="33"/></svg>'+IC.stop+'</button>';
   function paint(){
-    var v=S?vals():null,dn=st==="done";tl={};setTimeout(function(){drawMap();if(st==="idle")prev();},0);
-    var chip=st==="idle"?(rec?"Corrida interrompida":denied?"GPS indisponível":pos?"GPS pronto (±"+Math.round(acc)+" m)":"Buscando sinal GPS..."):dn?"Corrida concluída"+(priv()?", início e fim ocultos":""):st==="pause"?"Pausada":info;
+    var v=S?vals():null,dn=st==="done",K=S?(S.k||"r"):(rec&&st==="idle"?(rec.k||"r"):kind),T=tn(K);tl={};setTimeout(function(){drawMap();if(st==="idle")prev();},0);
+    var chip=st==="idle"?(rec?T.N+" interrompida":denied?"GPS indisponível":pos?"GPS pronto (±"+Math.round(acc)+" m)":"Buscando sinal GPS..."):dn?T.N+" concluída"+(priv()?", início e fim ocultos":""):st==="pause"?"Pausada":info;
     chipTxt=chip;box.className="card "+(fs?"gr-fs":"gr-cp");
     if(!fs){
       var run=st==="run"||st==="pause";
-      box.innerHTML='<div class="gr-cp-h"><div><h2>Gravar corrida</h2><div class="gr-cp-s">'+(run?'<span id="g-t">'+v.t+'</span> · <span id="g-d">'+v.d+'</span> km'+(st==="pause"?" · pausada":""):dn?"Corrida concluída: salve ou descarte.":rec?"Há uma corrida interrompida para continuar.":"Mapa em tela cheia com GPS, tempo, ritmo e distância.")+'</div>'+(ok?'<div class="gr-cp-s" role="status" style="margin-top:6px">'+ok+'</div>':'')+'</div>'+
-        '<button class="gr-open" data-g="open">'+(run||dn?"Voltar à corrida":"Abrir gravador")+'</button></div>';
+      box.innerHTML='<div class="gr-cp-h"><div><h2>Gravar '+T.n+'</h2><div class="gr-cp-s">'+(run?'<span id="g-t">'+v.t+'</span> · <span id="g-d">'+v.d+'</span> km'+(st==="pause"?" · pausada":""):dn?T.N+" concluída: salve ou descarte.":rec?"Há uma "+T.n+" interrompida para continuar.":"Mapa em tela cheia com GPS, tempo, ritmo e distância.")+'</div>'+(ok?'<div class="gr-cp-s" role="status" style="margin-top:6px">'+ok+'</div>':'')+'</div>'+
+        '<button class="gr-open" data-g="open">'+(run||dn?"Voltar à "+T.n:"Abrir gravador")+'</button></div>';
       return;
     }
     var hint="";
     if(!err&&!ok){
-      if(rec&&st==="idle")hint='Você tem uma corrida interrompida: <strong>'+fmt(rec.d,2)+' km em '+hms(rec.acc/1000)+'</strong>.';
+      if(rec&&st==="idle")hint='Você tem uma '+T.n+' interrompida: <strong>'+fmt(rec.d,2)+' km em '+hms(rec.acc/1000)+'</strong>.';
       else if(dn&&hidAll())hint='Trajeto oculto: corrida curta demais para esconder o início e o fim.';
       else if(lowW)hint=lowMsg();
-      else if(st==="idle"&&!nat())hint='Mantenha a tela ligada e a página aberta durante a corrida.';
+      else if(st==="idle"&&!nat())hint='Mantenha a tela ligada e a página aberta durante a '+T.n+'.';
       else if(st==="idle")hint='O GPS continua gravando com a tela apagada ou com outro app aberto.';
       if(mapBad)hint+=(hint?'<br>':'')+'O mapa não carregou (sem internet ou fonte bloqueada). Toque em camadas para trocar a fonte. O GPS continua gravando.';
     }
     var msg=err?'<div class="gr-msg err" role="alert">'+err+'</div>':ok?'<div class="gr-msg" role="status">'+ok+'</div>':hint?'<div class="gr-msg">'+hint+'</div>':'';
     var L,C,R;
     if(st==="idle"){
-      L=rec?it(cbtn("drop",IC.x,0,"Descartar corrida interrompida"),"Descartar"):it(ACT,"Corrida");
-      C=rec?it(cbtn("rec",IC.play,1,"Continuar corrida"),"Continuar","or"):it(cbtn("start",IC.play,1,"Iniciar corrida"),"Iniciar","or");
+      L=rec?it(cbtn("drop",IC.x,0,"Descartar "+T.n+" interrompida"),"Descartar"):it(actBtn(K,true),T.N);
+      C=rec?it(cbtn("rec",IC.play,1,"Continuar "+T.n),"Continuar","or"):it(cbtn("start",IC.play,1,"Iniciar "+T.n),"Iniciar","or");
       R=it(cbtn("manual",IC.edit,0,"Registrar corrida manualmente"),"Manual");
-    }else if(st==="run"){L=it(ACT,"Corrida");C=it(cbtn("pause",IC.pause,1,"Pausar"),"Pausar","or");R=it(HOLD,"Segure para finalizar");}
-    else if(st==="pause"){L=it(ACT,"Corrida");C=it(cbtn("resume",IC.play,1,"Retomar"),"Retomar","or");R=it(HOLD,"Segure para finalizar");}
-    else{L=it(cbtn("drop",IC.x,0,"Descartar corrida"),"Descartar");C=it(cbtn("save",IC.check,1,"Salvar corrida"),"Salvar","or");R='<div class="gr-it"></div>';}
+    }else if(st==="run"){L=it(actBtn(K,false),T.N);C=it(cbtn("pause",IC.pause,1,"Pausar"),"Pausar","or");R=it(HOLD,"Segure para finalizar");}
+    else if(st==="pause"){L=it(actBtn(K,false),T.N);C=it(cbtn("resume",IC.play,1,"Retomar"),"Retomar","or");R=it(HOLD,"Segure para finalizar");}
+    else{L=it(cbtn("drop",IC.x,0,"Descartar "+T.n),"Descartar");C=it(cbtn("save",IC.check,1,"Salvar "+T.n),"Salvar","or");R='<div class="gr-it"></div>';}
     var sheet='<div class="gr-sheet"><div class="gr-handle"></div><div class="gr-dock">'+L+C+R+'</div></div>',an=anim?" gb-anim":"";anim=false;
     if(big){
       box.innerHTML='<div class="gp-stage full gr-big'+an+'">'+
@@ -1263,7 +1318,7 @@ window.perfilInfo=function(){
         '<div class="gb-main"><div><div class="gb-v" id="g-a">'+(v?v.a:"--:--")+'</div><div class="gb-l">Ritmo médio (/km)</div></div>'+
         '<div><div class="gb-v" id="g-d">'+(v?v.d:"0,00")+'</div><div class="gb-l">Distância (km)</div></div>'+
         '<div><div class="gb-sp" id="g-sp" data-n="'+(S?S.sp.length:0)+'">'+spHtml()+'</div><div class="gb-l">Parciais (km)</div></div></div>'+
-        '<div class="gb-foot">'+msg+sheet+'</div></div>';
+        '<div class="gb-foot">'+msg+sheet+'</div>'+trayHtml()+'</div>';
       return;
     }
     var sm=dn?[stat("g-p","Melhor km (/km)",v.p),stat("g-m","Elev. máx.",v.m),stat("g-g","Ganho elev.",v.g),stat("g-k","Calorias",v.k)]:
@@ -1271,10 +1326,10 @@ window.perfilInfo=function(){
     box.innerHTML='<div class="gp-stage full'+an+'">'+bg()+
       '<div class="gr-top"><button class="gr-btn" data-g="min" aria-label="Minimizar gravador">'+IC.chev+'</button><div class="gr-chip" id="g-i" role="status">'+chip+'</div><span style="width:46px;flex:none"></span></div>'+
       '<div class="gr-bottom"><div class="gr-side"><button class="gr-btn" data-g="layers" aria-label="Trocar o mapa">'+IC.layers+'</button><button class="gr-btn" data-g="locate" aria-label="Centralizar na minha posição">'+IC.loc+'</button></div>'+msg+
-      '<div class="gr-panel"><div class="gr-ph">Corrida'+'<button class="gr-x" data-g="big" aria-label="Expandir: ver só tempo, ritmo e distância">'+IC.exp+'</button>'+'</div>'+
+      '<div class="gr-panel"><div class="gr-ph">'+T.N+'<button class="gr-x" data-g="big" aria-label="Expandir: ver só tempo, ritmo e distância">'+IC.exp+'</button></div>'+
       '<div class="gr-3" style="grid-template-columns:repeat(3,1fr)">'+stat("g-t","Tempo",v?v.t:"00:00")+stat("g-a","Ritmo médio (/km)",v?v.a:"--:--")+stat("g-d","Distância (km)",v?v.d:"0,00")+'</div>'+
       (sm.length?'<div class="gr-3 sm" style="grid-template-columns:repeat('+sm.length+',1fr)">'+sm.join("")+'</div>':'')+'</div>'+
-      sheet+'</div></div>';
+      sheet+'</div>'+trayHtml()+'</div>';
   }
   var hold=null;
   function he(){if(hold){clearTimeout(hold);hold=null;}var o=box.querySelector(".gr-hold.on");if(o)o.classList.remove("on");}
@@ -1286,12 +1341,15 @@ window.perfilInfo=function(){
   box.addEventListener("keyup",he);
 
   box.addEventListener("click",function(ev){
+    var ko=ev.target.closest("[data-k]");
+    if(ko&&tray){kind=ko.dataset.k==="w"?"w":"r";try{localStorage.setItem("gps-tipo",kind);}catch(e){}tray=false;paint();return;}
     var b=ev.target.closest("[data-g]");if(!b)return;
     var a=b.dataset.g;
+    if(a==="trayx"){if(ev.target===b){tray=false;paint();}return;}
     if(a==="start")start();else if(a==="pause")pause();else if(a==="resume")resume();else if(a==="finish")finish();
     else if(a==="save")saveRun();else if(a==="drop")drop();
     else if(a==="min")setFs(false);else if(a==="open")setFs(true);
-    else if(a==="big")setBig(true);else if(a==="small")setBig(false);
+    else if(a==="tray"){if(st==="idle"){tray=true;paint();}}else if(a==="big")setBig(true);else if(a==="small")setBig(false);
     else if(a==="manual"){setFs(false);var mi=$("run-d");if(mi){mi.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(function(){try{mi.focus({preventScroll:true});}catch(e){}},400);}}
     else if(a==="layers"){
       var cur=lsget("map-src")||"esri",key=(lsget("map-key")||"").trim(),ord=key?["esri","osm","mt"]:["esri","osm"],nm={esri:"Esri",osm:"OpenStreetMap",mt:"MapTiler"},nx=ord[(ord.indexOf(cur)+1)%ord.length];
@@ -1303,7 +1361,8 @@ window.perfilInfo=function(){
   });
   /* deslizar para cima abre a visão expandida; deslizar para baixo volta ao mapa */
   var sw=null;
-  box.addEventListener("pointerdown",function(ev){if(!fs||ev.target.closest("[data-hold]"))return;sw={x:ev.clientX,y:ev.clientY};});
+  document.addEventListener("keydown",function(ev){if(ev.key==="Escape"&&tray){tray=false;paint();}});
+  box.addEventListener("pointerdown",function(ev){if(!fs||tray||ev.target.closest("[data-hold]"))return;sw={x:ev.clientX,y:ev.clientY};});
   box.addEventListener("pointerup",function(ev){
     if(!sw)return;var dx=ev.clientX-sw.x,dy=ev.clientY-sw.y;sw=null;
     if(Math.abs(dy)<56||Math.abs(dy)<Math.abs(dx)*1.3)return;
