@@ -1108,14 +1108,16 @@ window.perfilInfo=function(){
   function proj(lat,lon,z){var s=256*Math.pow(2,z),r=lat*Math.PI/180;return[(lon+180)/360*s,(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*s];}
   /* fontes de mapa: o usuário escolhe na aba Corrida; se uma falhar por erro de rede, usa a reserva */
   function lsget(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  /* fonte escolhida: carto (padrão), esri ou mt. "osm" ficou de fora: os servidores públicos do OpenStreetMap bloqueiam apps (erro 403) */
+  function msrc(){var v=lsget("map-src");return v==="esri"||v==="mt"||v==="carto"?v:"carto";}
   function buildPV(){
-    var src=lsget("map-src")||"esri",key=(lsget("map-key")||"").trim();
+    var src=msrc(),key=(lsget("map-key")||"").trim();
     var E={id:"esri",u:function(z,x,y){return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/"+z+"/"+y+"/"+x;},c:" inv",a:"© Esri © OpenStreetMap"};
-    var O={id:"osm",u:function(z,x,y){return "https://tile.openstreetmap.org/"+z+"/"+x+"/"+y+".png";},c:" inv",a:"© OpenStreetMap"};
+    var C={id:"carto",u:function(z,x,y){return "https://"+"abcd".charAt((x+y)%4)+".basemaps.cartocdn.com/dark_all/"+z+"/"+x+"/"+y+(window.devicePixelRatio>1?"@2x":"")+".png";},c:"",a:"© CARTO © OpenStreetMap"};
     var M={id:"mt",u:function(z,x,y){return "https://api.maptiler.com/maps/streets-v2-dark/"+z+"/"+x+"/"+y+(window.devicePixelRatio>1?"@2x":"")+".png?key="+encodeURIComponent(key);},c:"",a:"© MapTiler © OpenStreetMap"};
-    if(src==="mt"&&key)return [M,E];
-    if(src==="osm")return [O,E];
-    return [E,O];
+    if(src==="mt"&&key)return [M,C,E];
+    if(src==="esri")return [E,C];
+    return [C,E];
   }
   var PV=buildPV(),pv=0,nf=0;
   function mk(z,x,y,lz){
@@ -1221,9 +1223,9 @@ window.perfilInfo=function(){
   /* escolha da fonte do mapa */
   var cfg=$("mapcfg"),mtm=null;
   function mapUI(){
-    var s=lsget("map-src")||"esri",k=lsget("map-key")||"";
+    var s=msrc(),k=lsget("map-key")||"";
     cfg.innerHTML='<h2>Mapa</h2><p class="hint" style="margin:0 0 10px">Se o mapa aparecer em branco ou com avisos, troque a fonte.</p><div class="seg" role="group" aria-label="Fonte do mapa">'+
-      [["esri","Esri"],["osm","OpenStreetMap"],["mt","MapTiler"]].map(function(o){return '<button data-ms="'+o[0]+'" aria-pressed="'+(s===o[0])+'">'+o[1]+'</button>';}).join("")+'</div>'+
+      [["carto","CARTO"],["esri","Esri"],["mt","MapTiler"]].map(function(o){return '<button data-ms="'+o[0]+'" aria-pressed="'+(s===o[0])+'">'+o[1]+'</button>';}).join("")+'</div>'+
       (s==="mt"?'<label for="map-k" style="margin-top:14px">Chave do MapTiler</label><input id="map-k" class="fld wide" autocomplete="off" placeholder="Cole a chave aqui" value="'+k.replace(/"/g,"")+'"><p class="hint">Chave grátis em cloud.maptiler.com, no menu Account, API keys. Sem a chave, o app usa o Esri.</p>':'');
   }
   function mapApply(){PV=buildPV();pv=0;nf=0;tl={};mapOk=false;mapBad=false;clearTimeout(mapT);mapT=null;paint();thumbs();}
@@ -1352,7 +1354,7 @@ window.perfilInfo=function(){
     else if(a==="tray"){if(st==="idle"){tray=true;paint();}}else if(a==="big")setBig(true);else if(a==="small")setBig(false);
     else if(a==="manual"){setFs(false);var mi=$("run-d");if(mi){mi.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(function(){try{mi.focus({preventScroll:true});}catch(e){}},400);}}
     else if(a==="layers"){
-      var cur=lsget("map-src")||"esri",key=(lsget("map-key")||"").trim(),ord=key?["esri","osm","mt"]:["esri","osm"],nm={esri:"Esri",osm:"OpenStreetMap",mt:"MapTiler"},nx=ord[(ord.indexOf(cur)+1)%ord.length];
+      var cur=msrc(),key=(lsget("map-key")||"").trim(),ord=key?["carto","esri","mt"]:["carto","esri"],nm={carto:"CARTO",esri:"Esri",mt:"MapTiler"},nx=ord[(ord.indexOf(cur)+1)%ord.length];
       try{localStorage.setItem("map-src",nx);}catch(e){}mapUI();mapApply();
       flashUntil=Date.now()+1800;setTimeout(function(){var n=$("g-i");if(n){n.textContent="Mapa: "+nm[nx];setTimeout(function(){var n2=$("g-i");if(n2)n2.textContent=chipTxt;},1800);}},40);
     }
