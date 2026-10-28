@@ -1,0 +1,8 @@
+{
+  "appId": "br.com.imctreino.app",
+  "appName": "IMC e Treino",
+  "webDir": "www",
+  "backgroundColor": "#eaf1ee",
+  "server": { "androidScheme": "https" },
+  "android": { "useLegacyBridge": true }
+}
