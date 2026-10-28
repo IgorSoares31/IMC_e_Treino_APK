@@ -1,0 +1,67 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Criar o projeto Android
+        run: npx cap add android
+
+      - name: Gerar ícones
+        continue-on-error: true
+        run: npx @capacitor/assets generate --android
+
+      - name: Permissões, tela ligada e versão
+        run: bash scripts/preparar-android.sh
+
+      - name: Usar a chave de assinatura fixa
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
+      - name: Copiar o app para o Android
+        run: npx cap sync android
+
+      - name: Compilar o APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Renomear o APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk IMC-e-Treino.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IMC-e-Treino
+          path: IMC-e-Treino.apk
+
+      - name: Publicar na página de Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ github.run_number }}" IMC-e-Treino.apk \
+            --title "Versão ${{ github.run_number }}" \
+            --notes "APK gerado automaticamente. Baixe o arquivo IMC-e-Treino.apk abaixo."
