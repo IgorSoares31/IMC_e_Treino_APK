@@ -26,6 +26,12 @@ jobs:
       - name: Instalar dependências
         run: npm install
 
+      - name: Adicionar o plugin de notificações
+        run: |
+          V=$(node -p "require('./node_modules/@capacitor/core/package.json').version.split('.')[0]")
+          echo "Capacitor versão $V: instalando o plugin de notificações da mesma versão"
+          npm install @capacitor/local-notifications@$V
+
       - name: Criar o projeto Android
         run: npx cap add android
 
@@ -35,6 +41,18 @@ jobs:
 
       - name: Permissões, tela ligada e versão
         run: bash scripts/preparar-android.sh
+
+      - name: Som da água e permissões de notificação
+        run: |
+          test -f assets/agua.wav || { echo "Falta o arquivo assets/agua.wav no repositório"; exit 1; }
+          mkdir -p android/app/src/main/res/raw
+          cp assets/agua.wav android/app/src/main/res/raw/agua.wav
+          M=android/app/src/main/AndroidManifest.xml
+          for P in POST_NOTIFICATIONS SCHEDULE_EXACT_ALARM USE_EXACT_ALARM RECEIVE_BOOT_COMPLETED VIBRATE; do
+            if ! grep -q "android.permission.$P" "$M"; then
+              sed -i "s|<application|<uses-permission android:name=\"android.permission.$P\" />\n    <application|" "$M"
+            fi
+          done
 
       - name: Usar a chave de assinatura fixa
         run: |
@@ -63,5 +81,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v${{ github.run_number }}" IMC-e-Treino.apk \
+            --title "Versão ${{ github.run_number }}" \
+            --notes "APK gerado automaticamente. Baixe o arquivo IMC-e-Treino.apk abaixo."
             --title "Versão ${{ github.run_number }}" \
             --notes "APK gerado automaticamente. Baixe o arquivo IMC-e-Treino.apk abaixo."
